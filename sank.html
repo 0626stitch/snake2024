@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能贪吃蛇2025版</title>
+    <style>
+        /* 未来科技风样式 */
+        body {
+            background: #0a0a2e;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #gameContainer {
+            position: relative;
+            margin-top: 2vh;
+        }
+        #gameCanvas {
+            border: 3px solid #00f7ff;
+            box-shadow: 0 0 20px rgba(0, 247, 255, 0.3);
+            background: #000;
+        }
+        #scoreBoard {
+            color: #00f7ff;
+            font-size: 2em;
+            text-shadow: 0 0 10px #00f7ff;
+            margin: 15px 0;
+        }
+        .control-tips {
+            color: #7d7dff;
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="scoreBoard">得分: 0</div>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="600" height="450"></canvas>
+    </div>
+    <div class="control-tips">
+        ←↑↓→ 控制方向 | 空格键暂停/继续<br>
+        双击画面切换夜间模式 
+    </div>
+ 
+    <script>
+        const canvas = document.getElementById('gameCanvas'); 
+        const ctx = canvas.getContext('2d'); 
+        const scoreElement = document.getElementById('scoreBoard'); 
+        
+        // 智能参数配置 
+        const config = {
+            gridSize: 15,
+            initialSpeed: 120,
+            acceleration: 0.95,
+            maxSpeed: 40,
+            specialFoodInterval: 8 
+        };
+ 
+        let snake = [];
+        let food = {};
+        let direction = 'right';
+        let nextDirection = 'right';
+        let score = 0;
+        let gameLoop;
+        let isPaused = false;
+        let isNightMode = false;
+ 
+        // 高级初始化系统 
+        function initGame() {
+            snake = [
+                {x: 5, y: 5},
+                {x: 4, y: 5},
+                {x: 3, y: 5}
+            ];
+            generateFood();
+            score = 0;
+            updateScore();
+            if(gameLoop) clearInterval(gameLoop);
+            gameLoop = setInterval(gameStep, config.initialSpeed); 
+        }
+ 
+        // 智能食物生成算法 
+        function generateFood() {
+            const isSpecial = score > 0 && score % config.specialFoodInterval  === 0;
+            do {
+                food = {
+                    x: Math.floor(Math.random()  * (canvas.width/config.gridSize)), 
+                    y: Math.floor(Math.random()  * (canvas.height/config.gridSize)), 
+                    type: isSpecial ? 'special' : 'normal'
+                };
+            } while(snake.some(segment  => segment.x === food.x && segment.y === food.y));
+        }
+ 
+        // 游戏核心逻辑 
+        function gameStep() {
+            if(isPaused) return;
+            
+            direction = nextDirection;
+            const head = {...snake[0]};
+ 
+            switch(direction) {
+                case 'up': head.y--; break;
+                case 'down': head.y++; break;
+                case 'left': head.x--; break;
+                case 'right': head.x++; break;
+            }
+ 
+            // 智能碰撞检测 
+            if (head.x < 0 || head.x >= canvas.width/config.gridSize  ||
+                head.y < 0 || head.y >= canvas.height/config.gridSize  ||
+                snake.some(segment  => segment.x === head.x && segment.y === head.y)) {
+                alert(`游戏结束！得分: ${score}`);
+                initGame();
+                return;
+            }
+ 
+            snake.unshift(head); 
+ 
+            // 高级食物系统 
+            if(head.x === food.x && head.y === food.y) {
+                score += food.type  === 'special' ? 3 : 1;
+                updateScore();
+                generateFood();
+                accelerateGame();
+            } else {
+                snake.pop(); 
+            }
+ 
+            draw();
+        }
+ 
+        // 动态加速系统 
+        function accelerateGame() {
+            const newSpeed = config.initialSpeed  * Math.pow(config.acceleration,  score);
+            clearInterval(gameLoop);
+            gameLoop = setInterval(gameStep, Math.max(newSpeed,  config.maxSpeed)); 
+        }
+ 
+        // 未来科技风渲染引擎 
+        function draw() {
+            ctx.fillStyle  = isNightMode ? '#000' : '#0a0a2e';
+            ctx.fillRect(0,  0, canvas.width,  canvas.height); 
+            
+            // 绘制智能路径光效 
+            ctx.shadowColor  = '#00f7ff';
+            ctx.shadowBlur  = 15;
+            
+            snake.forEach((segment,  index) => {
+                ctx.fillStyle  = `hsl(${index * 15}, 100%, 50%)`;
+                ctx.fillRect( 
+                    segment.x * config.gridSize, 
+                    segment.y * config.gridSize, 
+                    config.gridSize  - 1,
+                    config.gridSize  - 1 
+                );
+            });
+ 
+            // 特殊食物特效 
+            ctx.fillStyle  = food.type  === 'special' ? '#ff00ff' : '#00ff00';
+            ctx.beginPath(); 
+            ctx.arc( 
+                food.x * config.gridSize  + config.gridSize/2, 
+                food.y * config.gridSize  + config.gridSize/2, 
+                config.gridSize/2  - 1,
+                0, Math.PI * 2 
+            );
+            ctx.fill(); 
+            ctx.shadowBlur  = 0;
+        }
+ 
+        function updateScore() {
+            scoreElement.textContent  = `得分: ${score} ${'★'.repeat(Math.floor(score/5))}`; 
+        }
+ 
+        // 智能控制系统 
+        document.addEventListener('keydown',  (e) => {
+            switch(e.key)  {
+                case 'ArrowUp':
+                    if(direction !== 'down') nextDirection = 'up';
+                    break;
+                case 'ArrowDown':
+                    if(direction !== 'up') nextDirection = 'down';
+                    break;
+                case 'ArrowLeft':
+                    if(direction !== 'right') nextDirection = 'left';
+                    break;
+                case 'ArrowRight':
+                    if(direction !== 'left') nextDirection = 'right';
+                    break;
+                case ' ':
+                    isPaused = !isPaused;
+                    scoreElement.textContent  += isPaused ? ' [已暂停]' : '';
+                    break;
+            }
+        });
+ 
+        // 双击切换夜间模式 
+        canvas.addEventListener('dblclick',  () => {
+            isNightMode = !isNightMode;
+            draw();
+        });
+ 
+        // 启动游戏 
+        initGame();
+ 
+        // 自适应屏幕系统 
+        window.addEventListener('resize',  () => {
+            canvas.width  = Math.min(window.innerWidth  * 0.9, 600);
+            canvas.height  = canvas.width  * 0.75;
+            draw();
+        });
+        canvas.dispatchEvent(new  Event('resize'));
+    </script>
+</body>
+</html>
